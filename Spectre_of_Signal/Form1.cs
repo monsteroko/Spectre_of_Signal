@@ -27,7 +27,13 @@ namespace Spectre_of_Signal
         {
             MessageBox.Show("Created by EKNM");
         }
-
+        private void copyAlltoClipboard()
+        {
+            dataGridView1.SelectAll();
+            DataObject dataObj = dataGridView1.GetClipboardContent();
+            if (dataObj != null)
+                Clipboard.SetDataObject(dataObj);
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             // имя файла по умолчанию
@@ -51,7 +57,8 @@ namespace Spectre_of_Signal
                     datastr[0, 0] = "k";
                     datastr[0, 1] = "t";
                     datastr[0, 2] = "rez";
-                    for (int r = 6; r < 20002; r++)
+                    streamReader.ReadLine();
+                    for (int r = 1; r < 20002; r++)
                     {
                         string str = streamReader.ReadLine();
                         datastr[r, 0] = str.Substring(0, 14);                     
@@ -59,6 +66,7 @@ namespace Spectre_of_Signal
                     streamReader.Close();
                 }
             }
+            button1.Enabled = false;
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -83,11 +91,12 @@ namespace Spectre_of_Signal
                     for (int r = 0; r < 20001; r++)
                     {
                         string str = streamReaderrt.ReadLine();
-                        datastr[r+1, 2] = str.Substring(0,14);
+                        datastr[r+1, 1] = str.Substring(0,14);
                     }
                     streamReaderrt.Close();
                 }
             }
+            button5.Enabled = false;
             button7.Enabled = true;
         }
 
@@ -106,12 +115,26 @@ namespace Spectre_of_Signal
             for (int r = 1; r < 20003; r++)
             {
                 dataGridView1.Rows[r].Cells[0].Value = datastr[r, 0];
-                dataGridView1.Rows[r].Cells[1].Value = datastr[r, 2];
+                dataGridView1.Rows[r].Cells[1].Value = datastr[r, 1];
                 dataGridView1.Rows[r].Cells[2].Value = "Саня хуй саси";
             }
-            dataGridView1.Columns[0].Width = 50;
-            dataGridView1.Columns[1].Width = 80;
-            dataGridView1.Columns[2].Width = 80;
+            button3.Enabled = true;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            copyAlltoClipboard();
+            Microsoft.Office.Interop.Excel.Application xlexcel;
+            Microsoft.Office.Interop.Excel.Workbook xlWorkBook;
+            Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet;
+            object misValue = System.Reflection.Missing.Value;
+            xlexcel = new Microsoft.Office.Interop.Excel.Application();
+            xlexcel.Visible = true;
+            xlWorkBook = xlexcel.Workbooks.Add(misValue);
+            xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+            Microsoft.Office.Interop.Excel.Range CR = (Microsoft.Office.Interop.Excel.Range)xlWorkSheet.Cells[1, 1];
+            CR.Select();
+            xlWorkSheet.PasteSpecial(CR, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, true);
         }
     }
 }
