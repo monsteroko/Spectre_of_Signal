@@ -21,7 +21,12 @@ namespace Spectre_of_Signal
             button6.Enabled = false;
             button3.Enabled = false;
         }
-        public string[,] datastr;
+        public const int kznsize= 100000;
+        public const int tznsize = 20002;
+        public string[] kznstr;
+        public string[,] tznstr;
+        public double[] kzndbl;
+        public double[,] tzndbl;
         public int  linesCount;
         private void button4_Click(object sender, EventArgs e)
         {
@@ -36,32 +41,24 @@ namespace Spectre_of_Signal
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            // имя файла по умолчанию
             string rfname = @"C:\r.txt";
             OpenFileDialog open = new OpenFileDialog();
-            // задание начальной директории (1)
             open.InitialDirectory = "С:\\";
-            // задание свойства Filter (2)
-            open.Filter = "srt files (*.txt)|*.txt|All files (*.*)|*.*";
-            // задание свойства FilterIndex –исходный тип файла (3)
+            open.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             open.FilterIndex = 1;
-            // свойство Title - название окна диалога выбора файла (4)
             open.Title = "Открыть файл";
-            // метод ShowDialog() показывает окно диалога
             if (open.ShowDialog() == DialogResult.OK)
-            { // получаем имя файла для сохранения данных
-                rfname = open.FileName; // выделяем память для потока - объекта типа
+            {
+                rfname = open.FileName;
                 using (var streamReader = new StreamReader(rfname, Encoding.UTF8))
                 {
-                    datastr = new string[20003, 3];
-                    datastr[0, 0] = "k";
-                    datastr[0, 1] = "t";
-                    datastr[0, 2] = "rez";
+                    kznstr = new string[kznsize];
+                    kznstr[0] = "k";
                     streamReader.ReadLine();
-                    for (int r = 1; r < 20002; r++)
+                    for (int r = 1; r < kznsize; r++)
                     {
                         string str = streamReader.ReadLine();
-                        datastr[r, 0] = str.Substring(0, 14);                     
+                        kznstr[r] = str.Substring(0, 14);                     
                     }
                     streamReader.Close();
                 }
@@ -71,27 +68,25 @@ namespace Spectre_of_Signal
 
         private void button5_Click(object sender, EventArgs e)
         {
-            // имя файла по умолчанию
             string rfname23 = @"C:\t.txt";
             OpenFileDialog open = new OpenFileDialog();
-            // задание начальной директории (1)
             open.InitialDirectory = "С:\\";
-            // задание свойства Filter (2)
-            open.Filter = "srt files (*.txt)|*.txt|All files (*.*)|*.*";
-            // задание свойства FilterIndex –исходный тип файла (3)
+            open.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             open.FilterIndex = 1;
-            // свойство Title - название окна диалога выбора файла (4)
             open.Title = "Открыть файл";
-            // метод ShowDialog() показывает окно диалога
             if (open.ShowDialog() == DialogResult.OK)
-            { // получаем имя файла для сохранения данных
-                rfname23 = open.FileName; // выделяем память для потока - объекта типа
+            {
+                rfname23 = open.FileName;
                 using (var streamReaderrt = new StreamReader(rfname23, Encoding.UTF8))
                 {
-                    for (int r = 0; r < 20001; r++)
+                    tznstr = new string[tznsize, 2];
+                    tznstr[0,0] = "t";
+                    tznstr[0, 1] = "f(t)";
+                    for (int r = 0; r < tznsize-1; r++)
                     {
                         string str = streamReaderrt.ReadLine();
-                        datastr[r+1, 1] = str.Substring(0,14);
+                        tznstr[r+1, 0] = str.Substring(0,14);
+                        tznstr[r + 1, 1] = str.Substring(15, 15);
                     }
                     streamReaderrt.Close();
                 }
@@ -102,39 +97,145 @@ namespace Spectre_of_Signal
 
         private void button2_Click(object sender, EventArgs e)
         {
-
+            kzndbl = new double[kznsize];
+            tzndbl = new double[tznsize,2];
+            for (int r = 1; r < kznsize; r++)
+            {
+                double kfv = Convert.ToDouble(kznstr[r][0].ToString());
+                double kdrob = Convert.ToDouble(kznstr[r].Substring(2, 8));
+                kdrob /= 100000000;
+                kfv += kdrob;
+                double kvstp = Convert.ToInt32(kznstr[r][13].ToString());
+                if(kznstr[r].IndexOf('-')==-1)
+                {
+                    kvstp = Math.Pow(10, kvstp);
+                }
+                else
+                {
+                    kvstp = Math.Pow(0.1, kvstp);
+                }
+                kzndbl[r] = kfv* kvstp;
+            }
+            for (int r = 1; r < tznsize; r++)
+            {
+                double tfv = Convert.ToDouble(tznstr[r,0][0].ToString());
+                double ftfv = Convert.ToDouble(tznstr[r, 1][1].ToString());
+                double tdrob= Convert.ToDouble(tznstr[r, 0].Substring(2, 8));
+                tdrob /= 100000000;
+                tfv += tdrob;
+                double ftdrob = Convert.ToDouble(tznstr[r, 1].Substring(3, 8));
+                ftdrob /= 100000000;
+                ftfv += ftdrob;
+                double tstp = Convert.ToInt32(tznstr[r,0][13].ToString());
+                double ftstp = Convert.ToInt32(tznstr[r, 1][14].ToString());
+                if (tznstr[r,0].IndexOf('-') == -1)
+                {
+                    tstp = Math.Pow(10, tstp);
+                }
+                else
+                {
+                    tstp = Math.Pow(0.1, tstp);
+                }
+                if (tznstr[r, 1][0] == '-')
+                {
+                    ftfv *= -1;
+                }
+                if (tznstr[r, 1][11] == '-')
+                {
+                    ftstp = Math.Pow(0.1, ftstp);
+                }
+                else
+                {
+                    ftstp = Math.Pow(10, ftstp);
+                }
+                tzndbl[r,0] = tfv*tstp;
+                tzndbl[r, 1] =ftfv*ftstp;
+            }
+            dataGridView1.ColumnCount = 2;
+            dataGridView1.Rows[0].Cells[1].Value = kznstr[0] + " conv";
+            for (int r = 1; r < kznsize; r++)
+            {
+                dataGridView1.Rows[r].Cells[1].Value = kzndbl[r].ToString();
+            }
+            dataGridView2.ColumnCount = 4;
+            dataGridView2.Rows[0].Cells[2].Value = tznstr[0, 0] + " conv";
+            dataGridView2.Rows[0].Cells[3].Value = tznstr[0, 1] + " conv";
+            for (int r = 1; r < tznsize; r++)
+            {
+                dataGridView2.Rows[r].Cells[2].Value = tzndbl[r, 0].ToString();
+                dataGridView2.Rows[r].Cells[3].Value = tzndbl[r, 1].ToString();
+            }
+            button2.Enabled = false;
+            button6.Enabled = true;
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            dataGridView1.RowCount = 20003;
-            dataGridView1.ColumnCount = 3;
-            dataGridView1.Rows[0].Cells[0].Value = datastr[0, 0];
-            dataGridView1.Rows[0].Cells[1].Value = datastr[0, 1];
-            dataGridView1.Rows[0].Cells[2].Value = datastr[0, 2];
-            for (int r = 1; r < 20003; r++)
+            dataGridView1.RowCount = kznsize;
+            dataGridView1.ColumnCount = 1;
+            dataGridView1.Rows[0].Cells[0].Value = kznstr[0];
+            for (int r = 1; r < kznsize; r++)
             {
-                dataGridView1.Rows[r].Cells[0].Value = datastr[r, 0];
-                dataGridView1.Rows[r].Cells[1].Value = datastr[r, 1];
-                dataGridView1.Rows[r].Cells[2].Value = "Саня хуй саси";
+                dataGridView1.Rows[r].Cells[0].Value = kznstr[r];
             }
-            button3.Enabled = true;
+            dataGridView2.RowCount = tznsize;
+            dataGridView2.ColumnCount = 2;
+            dataGridView2.Rows[0].Cells[0].Value = tznstr[0, 0];
+            dataGridView2.Rows[0].Cells[1].Value = tznstr[0, 1];
+            for (int r = 1; r < tznsize; r++)
+            {
+                dataGridView2.Rows[r].Cells[0].Value = tznstr[r, 0];
+                dataGridView2.Rows[r].Cells[1].Value = tznstr[r, 1];
+            }
+            button7.Enabled = false;
+            button2.Enabled = true;
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            copyAlltoClipboard();
-            Microsoft.Office.Interop.Excel.Application xlexcel;
-            Microsoft.Office.Interop.Excel.Workbook xlWorkBook;
-            Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet;
-            object misValue = System.Reflection.Missing.Value;
-            xlexcel = new Microsoft.Office.Interop.Excel.Application();
-            xlexcel.Visible = true;
-            xlWorkBook = xlexcel.Workbooks.Add(misValue);
-            xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
-            Microsoft.Office.Interop.Excel.Range CR = (Microsoft.Office.Interop.Excel.Range)xlWorkSheet.Cells[1, 1];
-            CR.Select();
-            xlWorkSheet.PasteSpecial(CR, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, true);
+            Microsoft.Office.Interop.Excel._Application app = new Microsoft.Office.Interop.Excel.Application();
+            Microsoft.Office.Interop.Excel._Workbook workbook = app.Workbooks.Add(Type.Missing);
+            Microsoft.Office.Interop.Excel._Worksheet worksheetk = (Microsoft.Office.Interop.Excel._Worksheet)workbook.Worksheets.Add(); 
+            app.Visible = true;
+            worksheetk = workbook.ActiveSheet;
+            worksheetk.Name = "k";
+            for (int i = 1; i < dataGridView1.Columns.Count + 1; i++)
+            {
+                worksheetk.Cells[1, i] = dataGridView1.Columns[i - 1].HeaderText;
+            } 
+            for (int i = 0; i < dataGridView1.Rows.Count - 1; i++)
+            {
+                for (int j = 0; j < dataGridView1.Columns.Count; j++)
+                {
+                    worksheetk.Cells[i + 2, j + 1] = dataGridView1.Rows[i].Cells[j].Value.ToString();
+                }
+            }
+            Microsoft.Office.Interop.Excel._Worksheet worksheett = (Microsoft.Office.Interop.Excel._Worksheet)workbook.Worksheets.Add();
+            app.Visible = true;
+            worksheett = workbook.ActiveSheet;
+            worksheett.Name = "t";  
+            for (int i = 1; i < dataGridView2.Columns.Count + 1; i++)
+            {
+                worksheett.Cells[1, i] = dataGridView2.Columns[i - 1].HeaderText;
+            } 
+            for (int i = 0; i < dataGridView2.Rows.Count - 1; i++)
+            {
+                for (int j = 0; j < dataGridView2.Columns.Count; j++)
+                {
+                    worksheett.Cells[i + 2, j + 1] = dataGridView2.Rows[i].Cells[j].Value.ToString();
+                }
+            }
+            workbook.SaveAs("output.xls", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+            app.Quit();
+            button1.Enabled = true;
+            button5.Enabled = true;
+            button3.Enabled = false;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            button6.Enabled = false;
+            button3.Enabled = true;
         }
     }
 }
